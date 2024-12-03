@@ -30,11 +30,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
   // Step 3: Handle unregistration of Service Workers
   if (message.type === "UNREGISTER_SW") {
-    if (sender.tab && sender.tab.id) {
-      console.log("Initiating Service Worker unregistration for tab:", sender.tab.id);
+    console.log("sender: " + sender)
+    if (message.tabId) {
+      console.log("Initiating Service Worker unregistration for tab:", message.tabId);
       chrome.scripting.executeScript(
         {
-          target: { tabId: sender.tab.id },
+          target: { tabId: parseInt(message.tabId, 10) }, // Ensure tabId is an integer
           files: ["unregisterSW.js"], // Ensure this script is present in your extension
         },
         () => {

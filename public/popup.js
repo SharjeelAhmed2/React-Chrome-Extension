@@ -50,9 +50,9 @@ document.getElementById("unregister-sw").addEventListener("click", () => {
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
     const currentTab = tabs[0];
 
-    if (currentTab) {
+    if (currentTab && currentTab.id) {
       chrome.runtime.sendMessage(
-        { type: "UNREGISTER_SW" },
+        { type: "UNREGISTER_SW", tabId: currentTab.id, },
         (response) => {
           if (response && response.success) {
             console.log(response.message);
