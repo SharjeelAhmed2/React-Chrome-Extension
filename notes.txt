@@ -1,0 +1,7 @@
+If a logged in session logs out then 
+This behavior indicates that when you clear cookies, cache, and local storage for a specific domain, it affects all tabs sharing the same session 
+data for that domain. Essentially, Chrome doesn't treat tabs independently when it comes to cookies and storage—they're global to the browser.
+
+To fix this and allow multiple independent sessions for the same domain, you need to implement session isolation. Unfortunately, Chrome Extensions 
+don't directly support true session isolation, but there are a couple of workarounds:
+
