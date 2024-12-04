@@ -5,3 +5,17 @@ data for that domain. Essentially, Chrome doesn't treat tabs independently when 
 To fix this and allow multiple independent sessions for the same domain, you need to implement session isolation. Unfortunately, Chrome Extensions 
 don't directly support true session isolation, but there are a couple of workarounds:
 
+Why the YouTube doesn't work 
+
+YouTube might store login tokens in IndexedDB or session storage, which are untouched by cookies removal.
+
+SessionBox solution was :
+
+SessionBox uses isolated browser profiles for tabs, effectively sandboxing each session. Each "box" operates in a virtualized environment, 
+separating cookies, cache, storage, and authentication data from other tabs.
+
+Solution for Youtube;
+
+Delete All Cookies for Relevant Domains
+Force Cache Clearing
+Inject Scripts to Further Clear Persistent Data

@@ -52,11 +52,14 @@ document.getElementById("unregister-sw").addEventListener("click", () => {
 
     if (currentTab && currentTab.id) {
       chrome.runtime.sendMessage(
-        { type: "UNREGISTER_SW", tabId: currentTab.id, },
+        { type: "UNREGISTER_SW", 
+          tabId: currentTab.id,  
+          url: currentTab.url, // Include the current tab's URL
+        },
         (response) => {
           if (response && response.success) {
             console.log(response.message);
-            alert("Service Worker cleanup initiated!");
+          //  alert("Service Worker cleanup initiated!");
           } else {
             console.error("Service Worker cleanup failed:", response?.message || "Unknown error.");
             alert("Failed to cleanup Service Workers.");

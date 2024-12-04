@@ -28,8 +28,40 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true; // Keep the message channel open for async response
   }
 
+  /// For YOUTUBE
+
+  /// Delete All Cookies for Relevant Domains
+
+  function clearAllCookiesForYouTube() {
+    const domains = ["https://www.youtube.com", "https://accounts.google.com"];
+    domains.forEach((domain) => {
+      chrome.cookies.getAll({ url: domain }, (cookies) => {
+        cookies.forEach((cookie) => {
+          chrome.cookies.remove({
+            url: `${domain}${cookie.path}`,
+            name: cookie.name,
+          });
+          console.log(`Removed cookie: ${cookie.name} for ${domain}`);
+        });
+      });
+    });
+  }
+
+  /// Force Cache Clearing
+
+  function clearCacheForYouTube() {
+    const origins = ["https://www.youtube.com", "https://accounts.google.com"];
+    chrome.browsingData.remove(
+      { origins },
+      { cache: true },
+      () => console.log("Cache cleared for YouTube-related domains.")
+    );
+  }
+  
+
   // Step 3: Handle unregistration of Service Workers
   if (message.type === "UNREGISTER_SW") {
+    const {tabId , url} = message;
     console.log("sender: " + sender)
     if (message.tabId) {
       console.log("Initiating Service Worker unregistration for tab:", message.tabId);
@@ -38,9 +70,55 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           target: { tabId: parseInt(message.tabId, 10) }, // Ensure tabId is an integer
           files: ["unregisterSW.js"], // Ensure this script is present in your extension
         },
-        () => {
-          console.log("Service Worker unregistration script injected.");
-          sendResponse({ success: true, message: "Service Worker unregistration initiated." });
+        // () => {
+        //   console.log("Service Worker unregistration script injected.");
+        //   sendResponse({ success: true, message: "Service Worker unregistration initiated." });
+        // }
+        // Changes made to open another tab
+        (results) => {
+          if (chrome.runtime.lastError) {
+            console.error("Error injecting script:", chrome.runtime.lastError.message);
+            sendResponse({ success: false, message: "Failed to inject Service Worker unregistration script." });
+          } else {
+            
+            console.log("Service Worker unregistration script injected:", results);
+
+            // Clear cookies, cache, and storage
+            clearAllCookiesForYouTube();
+            clearCacheForYouTube();
+            // After unregistering SW, open a new tab with the same URL
+            // chrome.tabs.create({ url }, (newTab) => {
+            //   console.log("New tab opened with URL:", url);
+            //   sendResponse({ success: true, message: "Service Worker cleanup initiated and new tab opened." });
+            // });
+
+                    // Step 2: Clear IndexedDB and Local Storage
+              chrome.scripting.executeScript(
+              {
+                target: { tabId },
+                func: () => {
+                  window.localStorage.clear();
+                  window.sessionStorage.clear();
+                  indexedDB.databases().then((databases) =>
+                    databases.forEach((db) => indexedDB.deleteDatabase(db.name))
+                  );
+                  console.log("Local storage and IndexedDB cleared.");
+                },
+              },
+              () => {
+                console.log("IndexedDB and Local Storage cleared.");
+
+                // Step 3: Open a New Tab with the Same URL
+                chrome.tabs.create({ url: message.url }, () => {
+                  console.log("New tab opened with cleared session.");
+                  sendResponse({
+                    success: true,
+                    message: "Session cleared and new tab opened.",
+                  });
+                });
+              }
+            );
+          }
         }
       );
       return true;
