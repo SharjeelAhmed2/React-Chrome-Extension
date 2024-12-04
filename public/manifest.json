@@ -7,7 +7,7 @@
   "activeTab",
   "tabs",
   "scripting",
-  "storage","cookies"],
+  "storage","cookies","notifications"],
   "host_permissions": ["<all_urls>"],
   "action": {
     "default_popup": "index.html",

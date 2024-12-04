@@ -58,6 +58,72 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     );
   }
   
+  /// Further To prevent Google services to log back in 
+
+  // function clearSessionDataAndOpenTab(origin, callback) {
+  //   chrome.browsingData.remove(
+  //     { origins: [origin] },
+  //     { cookies: true, cache: true, localStorage: true },
+  //     () => {
+  //       console.log("Data cleared for:", origin);
+  //       callback();
+  //     }
+  //   );
+  // }
+
+  function clearSessionDataAndOpenTab(origin,tabId, callback) {
+    chrome.browsingData.remove(
+      { origins: [origin] },
+      { cookies: true, cache: true, localStorage: true },
+      () => {
+        console.log("Cookies, cache, and localStorage cleared for:", origin);
+  
+        // Explicitly clear IndexedDB
+        chrome.scripting.executeScript(
+          {
+            target: { tabId: tabId },
+            func: () => {
+              indexedDB.databases().then((databases) =>
+                databases.forEach((db) => indexedDB.deleteDatabase(db.name))
+              );
+              console.log("IndexedDB cleared.");
+            },
+          },
+          () => {
+            console.log("Session data cleared fully for:", origin);
+            if (callback) callback();
+          }
+        );
+      }
+    );
+  }
+
+
+  function clearSessionAndOpenWithDelay(url,tabId, delay, callback) {
+    console.log(`Clearing session and opening a tab with delay: ${delay}ms`);
+    setTimeout(() => {
+      // Clear session data (cookies, cache, localStorage, etc.)
+      clearSessionDataAndOpenTab(url,tabId, () => {
+        chrome.tabs.create({ url }, (newTab) => {
+          console.log("New tab opened after delay:", newTab.id);
+          if (callback) callback();
+        });
+      });
+    }, delay);
+  }
+
+
+  function clearAndReload(tabId, origin, url) {
+    clearSessionDataAndOpenTab(origin, async () => {
+      try {
+        await unregisterServiceWorker(tabId);
+        console.log("Opening new tab...");
+        chrome.tabs.create({ url });
+      } catch (error) {
+        console.error("Error during unregistration:", error);
+      }
+    });
+  }
 
   // Step 3: Handle unregistration of Service Workers
   if (message.type === "UNREGISTER_SW") {
@@ -82,10 +148,25 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           } else {
             
             console.log("Service Worker unregistration script injected:", results);
+            // Add alert to notify the user
+            // Alert doesn't work directly in your JS 
+           //alert("Please wait while we clear your session and open the new tab...");
+
+            // chrome.notifications.create({
+            //   type: "basic",
+            //   title: "Action in Progress",
+            //   message: "Please wait while we clear the session and reopen the tab.",
+            // });
 
             // Clear cookies, cache, and storage
-            clearAllCookiesForYouTube();
-            clearCacheForYouTube();
+            //      clearAllCookiesForYouTube();
+            
+            /// New implemented method because YouTube or other Google services keep logging back 
+                // Add a delay for additional actions if required
+            clearSessionAndOpenWithDelay(url, tabId, 3000, () => {
+              console.log("Session cleared and tab opened with delay.");
+            });
+            //clearCacheForYouTube();
             // After unregistering SW, open a new tab with the same URL
             // chrome.tabs.create({ url }, (newTab) => {
             //   console.log("New tab opened with URL:", url);
@@ -93,7 +174,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             // });
 
                     // Step 2: Clear IndexedDB and Local Storage
-              chrome.scripting.executeScript(
+                    
+                    /** commented after implemented the clearSessionAndOpenWithDelay */
+
+        /**      chrome.scripting.executeScript(
               {
                 target: { tabId },
                 func: () => {
@@ -117,7 +201,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                   });
                 });
               }
-            );
+            ); */
           }
         }
       );
