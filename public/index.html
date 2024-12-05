@@ -4,13 +4,35 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Session Box</title>
-  <link rel="stylesheet" href="popup.css">
+  <style>
+    /* Hide buttons by default */
+    button {
+      display: none;
+    }
+
+    .container {
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    h1 {
+      font-size: 20px;
+      margin-bottom: 15px;
+    }
+
+    button {
+      font-size: 14px;
+      padding: 10px 20px;
+      margin: 5px;
+      cursor: pointer;
+    }
+  </style>
 </head>
 <body>
   <div class="container">
     <h1>Session Box</h1>
-    <button id="open-session">Open Session</button>
-    <button id="unregister-sw">Unregister Service Workers</button>
+    <button id="open-session">Open New Session</button>
+    <button id="unregister-sw">Open New</button>
   </div>
   <script src="popup.js"></script>
 </body>
