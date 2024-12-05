@@ -71,47 +71,111 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   //   );
   // }
 
-  function clearSessionDataAndOpenTab(origin,tabId, callback) {
+  function clearSessionDataAndOpenTab(origin, tabId, callback) {
+    console.log("Starting session data clearing for:", origin);
+  
+    // Step 1: Clear browsing data
     chrome.browsingData.remove(
       { origins: [origin] },
       { cookies: true, cache: true, localStorage: true },
       () => {
         console.log("Cookies, cache, and localStorage cleared for:", origin);
   
-        // Explicitly clear IndexedDB
+        // Step 2: Clear IndexedDB
         chrome.scripting.executeScript(
           {
-            target: { tabId: tabId },
+            target: { tabId: parseInt(tabId, 10) },
             func: () => {
               indexedDB.databases().then((databases) =>
-                databases.forEach((db) => indexedDB.deleteDatabase(db.name))
+                databases.forEach((db) => {
+                  indexedDB.deleteDatabase(db.name);
+                  console.log(`IndexedDB database cleared: ${db.name}`);
+                })
               );
-              console.log("IndexedDB cleared.");
             },
           },
-          () => {
-            console.log("Session data cleared fully for:", origin);
-            if (callback) callback();
+          (results) => {
+            if (chrome.runtime.lastError) {
+              console.error(
+                "Error while clearing IndexedDB:",
+                chrome.runtime.lastError.message
+              );
+              if (callback) callback(); // Ensure the callback is called even on error
+            } else {
+              console.log("IndexedDB clearing results:", results);
+              if (callback) callback();
+            }
           }
         );
       }
     );
   }
+  
+  
 
 
-  function clearSessionAndOpenWithDelay(url,tabId, delay, callback) {
+  function clearSessionAndOpenWithDelay(url, delay, tabId, callback) {
     console.log(`Clearing session and opening a tab with delay: ${delay}ms`);
-    setTimeout(() => {
-      // Clear session data (cookies, cache, localStorage, etc.)
-      clearSessionDataAndOpenTab(url,tabId, () => {
-        chrome.tabs.create({ url }, (newTab) => {
-          console.log("New tab opened after delay:", newTab.id);
-          if (callback) callback();
-        });
-      });
-    }, delay);
+  
+    const origin = new URL(url).origin;
+  
+    // Step 1: Log out from YouTube
+    fetch("https://accounts.google.com/Logout", {
+      credentials: "include",
+      method: "GET",
+    })
+      .then((response) => {
+        if (response.ok) {
+          console.log("Logged out from YouTube successfully.");
+  
+          // Step 2: Wait for delay and clear session data
+          setTimeout(() => {
+            clearSessionDataAndOpenTab(origin, tabId, () => {
+              // Step 3: Open a new tab
+              chrome.tabs.create({ url }, (newTab) => {
+                console.log("New tab opened after delay:", newTab.id);
+                if (callback) callback();
+              });
+            });
+          }, delay);
+        } else {
+          console.error("Logout failed with status:", response.status);
+        }
+      })
+      .catch((error) => console.error("Logout request failed:", error));
   }
+  
 
+  /// Removing Timeout
+
+  function clearSessionAndOpenImmediately(url, tabId, callback) {
+    console.log(`Clearing session and opening a tab immediately.`);
+  
+    const origin = new URL(url).origin;
+  
+    // Step 1: Log out from YouTube
+    fetch("https://accounts.google.com/Logout", {
+      credentials: "include",
+      method: "GET",
+    })
+      .then((response) => {
+        if (response.ok) {
+          console.log("Logged out from YouTube successfully.");
+  
+          // Step 2: Clear session data
+          clearSessionDataAndOpenTab(origin, tabId, () => {
+            // Step 3: Open a new tab
+            chrome.tabs.create({ url }, (newTab) => {
+              console.log("New tab opened:", newTab.id);
+              if (callback) callback();
+            });
+          });
+        } else {
+          console.error("Logout failed with status:", response.status);
+        }
+      })
+      .catch((error) => console.error("Logout request failed:", error));
+  }
 
   function clearAndReload(tabId, origin, url) {
     clearSessionDataAndOpenTab(origin, async () => {
@@ -163,9 +227,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             
             /// New implemented method because YouTube or other Google services keep logging back 
                 // Add a delay for additional actions if required
-            clearSessionAndOpenWithDelay(url, tabId, 3000, () => {
-              console.log("Session cleared and tab opened with delay.");
-            });
+                clearSessionAndOpenImmediately(url, tabId, () => {
+                  console.log("Tab creation completed successfully.");
+                });
             //clearCacheForYouTube();
             // After unregistering SW, open a new tab with the same URL
             // chrome.tabs.create({ url }, (newTab) => {
