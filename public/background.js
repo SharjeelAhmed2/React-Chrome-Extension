@@ -111,7 +111,76 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     );
   }
   
+  /// Further Enchancements because on YouTube it opens it once then doesn't 
+
+  function preClearSessionData(callback) {
+    chrome.browsingData.remove(
+      { origins: ["https://accounts.google.com", "https://www.youtube.com"] },
+      { cookies: true, cache: true, localStorage: true, indexedDB: true, serviceWorkers: true },
+      () => {
+        console.log("Preemptive session data cleared.");
+        if (callback) callback();
+      }
+    );
+  }
+
+  function logoutAndClearSession(url, tabId, callback) {
+    const origin = new URL(url).origin;
   
+    // Step 1: Force Logout
+    fetch("https://accounts.google.com/Logout", {
+      credentials: "include",
+      method: "GET",
+    })
+      .then((response) => {
+        if (response.ok) {
+          console.log("Logout request successful. Proceeding to clear session data.");
+          // Step 2: Pre-clear session data
+          preClearSessionData(() => {
+            clearSessionDataAndOpenTab(origin, tabId, () => {
+              // Step 3: Open the new tab
+              chrome.tabs.create({ url }, (newTab) => {
+                console.log("New tab opened after clearing session data:", newTab.id);
+                if (callback) callback();
+              });
+            });
+          });
+        } else {
+          console.error("Logout request failed with status:", response.status);
+        }
+      })
+      .catch((error) => console.error("Logout request failed:", error));
+  }
+
+  function unregisterAllServiceWorkers(tabId, callback) {
+    chrome.scripting.executeScript(
+      {
+        target: { tabId },
+        func: () => {
+          navigator.serviceWorker.getRegistrations().then((registrations) => {
+            registrations.forEach((registration) => registration.unregister());
+            console.log("All Service Workers unregistered.");
+          });
+        },
+      },
+      () => {
+        console.log("Service Workers unregistered on tab:", tabId);
+        if (callback) callback();
+      }
+    );
+  }
+
+  function handleLogoutAndOpenTab(url, tabId) {
+    console.log("Handling logout and tab opening process for URL:", url);
+  
+    unregisterAllServiceWorkers(tabId, () => {
+      logoutAndClearSession(url, tabId, () => {
+        console.log("All steps completed successfully.");
+      });
+    });
+  }
+
+  ////////////
 
 
   function clearSessionAndOpenWithDelay(url, delay, tabId, callback) {
@@ -227,9 +296,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             
             /// New implemented method because YouTube or other Google services keep logging back 
                 // Add a delay for additional actions if required
-                clearSessionAndOpenImmediately(url, tabId, () => {
-                  console.log("Tab creation completed successfully.");
-                });
+                handleLogoutAndOpenTab(url, tabId);
             //clearCacheForYouTube();
             // After unregistering SW, open a new tab with the same URL
             // chrome.tabs.create({ url }, (newTab) => {

@@ -19,3 +19,10 @@ Solution for Youtube;
 Delete All Cookies for Relevant Domains
 Force Cache Clearing
 Inject Scripts to Further Clear Persistent Data
+
+
+YouTube auto-sign in on the first time issue 
+
+The first call might trigger a session token from a different source (like sharedStorage or iframe loading Google credentials).
+Subsequent actions clear this "backup token," preventing auto-login.
+
