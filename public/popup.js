@@ -7,7 +7,10 @@ document.addEventListener("DOMContentLoaded", () => {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       const activeTab = tabs[0];
       const url = activeTab?.url || "";
-  
+
+      // Display the current URL in the textbox
+      const urlBox = document.getElementById('current-url');
+      urlBox.value = url;
       // Add event listeners based on the URL
       if (url.includes("youtube.com") || url.includes("gmail.com")) {
         unregisterSWButton.style.display = "block";

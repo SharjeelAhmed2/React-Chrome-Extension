@@ -9,30 +9,84 @@
     button {
       display: none;
     }
+    html, body {
+  margin: 0; /* Remove default margins */
+  padding: 0; /* Remove default padding */
+  width: 300px;  /* max: 800px */
+  height: 200px; /* max: 600px */
+  display: flex; /* Enable flexible layout */
+  justify-content: center; /* Horizontally center */
+  align-items: center; /* Vertically center */
+  background-color: #eaeaea; /* Light background for contrast */
+}
 
-    .container {
-      text-align: center;
-      margin-top: 20px;
-    }
+.container {
+  text-align: center;
+  margin-top: 0; /* Centering handled by flexbox */
+  margin-left: auto;
+  margin-right: auto;
+  width: 90%; /* Wider but responsive */
+  max-width: 300px; /* Ensures it's not too wide */
+  padding: 20px; /* Padding inside container */
+  background-color: #ffffff; /* Clean white background */
+  border: 2px solid #ddd; /* Subtle border */
+  border-radius: 10px; /* Rounded corners */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Slightly stronger shadow */
+  font-family: Arial, sans-serif; /* Consistent font */
+}
 
-    h1 {
-      font-size: 20px;
-      margin-bottom: 15px;
-    }
+h1 {
+  font-size: 22px; /* Slightly larger for better readability */
+  margin-bottom: 15px; /* Spacing below header */
+  color: #333; /* Darker text for contrast */
+}
 
-    button {
-      font-size: 14px;
-      padding: 10px 20px;
-      margin: 5px;
-      cursor: pointer;
-    }
+button {
+  font-size: 16px; /* Better button text size */
+  padding: 10px 20px; /* Spacious button padding */
+  margin: 10px 0; /* Even spacing around buttons */
+  cursor: pointer;
+  background-color: #007bff; /* Light blue for a modern look */
+  color: white; /* Contrast text */
+  border: none;
+  border-radius: 5px; /* Rounded buttons */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+  transition: background-color 0.3s ease; /* Smooth hover effect */
+}
+
+button:hover {
+  background-color: #0056b3; /* Darker blue on hover */
+}
+
+.url-box {
+  margin-bottom: 15px; /* Spacing below input */
+}
+
+input[type="text"] {
+  width: 90%; /* Wide but responsive input */
+  padding: 8px; /* Add padding */
+  font-size: 14px; /* Match text size with buttons */
+  text-align: center; /* Center-align text */
+  border: 1px solid #ccc; /* Light gray border */
+  border-radius: 5px; /* Rounded input box */
+  background-color: #f9f9f9; /* Light background */
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1); /* Slight depth */
+}
+
+input[type="text"]:focus {
+  outline: none; /* Remove default focus outline */
+  border-color: #007bff; /* Match the button color */
+}
   </style>
 </head>
 <body>
   <div class="container">
     <h1>Session Box</h1>
-    <button id="open-session">Open New Session</button>
-    <button id="unregister-sw">Open New</button>
+    <div class="url-box">
+      <input id="current-url" type="text" value="" readonly />
+    </div>
+    <button id="open-session">Open Session</button>
+    <button id="unregister-sw">Unregister Service Workers</button>
   </div>
   <script src="popup.js"></script>
 </body>
